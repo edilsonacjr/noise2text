@@ -17,7 +17,7 @@ class TestNILCDriver(unittest.TestCase):
             for byte_block in iter(lambda: f.read(4096), b""):
                 md5_hash.update(byte_block)
 
-        self.assertEquals(md5_hash.hexdigest(), 'fa4345e194bc47f15e5ec194c26db9c2')
+        self.assertEqual(md5_hash.hexdigest(), 'fa4345e194bc47f15e5ec194c26db9c2')
 
     def tearDown(self):
         try:
