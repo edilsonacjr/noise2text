@@ -57,6 +57,10 @@ class NILCDriver:
             zip_info.filename = self.file_name + '.txt'
             zipdata.extract(zip_info, path=self.output_save)
 
+    def download_extract(self):
+        self.download()
+        self.extract()
+
 
 def main():
     pass
