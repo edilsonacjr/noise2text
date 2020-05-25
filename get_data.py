@@ -9,6 +9,8 @@
 import os
 import urllib.request
 
+import nltk
+
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -62,8 +64,36 @@ class NILCDriver:
         self.extract()
 
 
+class NewsG1Driver:
+    def __init__(self, file_name, path='data/', remove_stopwords=True, processed_pattern='processed_{file_name}'):
+        self.file = os.path.join(path, file_name)
+        self.file_save = os.path.join(path, processed_pattern.format(file_name=file_name))
+        self.remove_stopwords = remove_stopwords
+        self.tokenizer = nltk.tokenize.RegexpTokenizer('(?u)\\b\\w\\w+\\b')
+        if remove_stopwords:
+            self.stopwords = nltk.corpus.stopwords.words('portuguese')
+        else:
+            self.stopwords = []
+        self.sentences = []
+
+    def preprocess(self):
+        with open(self.file, 'r') as f_text:
+            for line in f_text:
+                original_tokens = self.tokenizer.tokenize(line)
+                tokens = [w.lower() for w in original_tokens if w.lower() not in self.stopwords and
+                          not w.isnumeric() and len(w) > 1]
+                self.sentences.append(' '.join(tokens))
+
+    def save_sentences(self):
+        with open(self.file_save, 'w') as output_file:
+            for sentence in self.sentences:
+                output_file.write(sentence)
+
+
 def main():
-    pass
+    g1 = NewsG1Driver(file_name='g1_final.txt')
+    g1.preprocess()
+    g1.save_sentences()
 
 
 if __name__ == '__main__':
