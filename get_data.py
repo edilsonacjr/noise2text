@@ -68,7 +68,6 @@ class NewsG1Driver:
     def __init__(self, file_name, path='data/', remove_stopwords=True, processed_pattern='processed_{file_name}'):
         self.file = os.path.join(path, file_name)
         self.file_save = os.path.join(path, processed_pattern.format(file_name=file_name))
-        self.remove_stopwords = remove_stopwords
         self.tokenizer = nltk.tokenize.RegexpTokenizer('(?u)\\b\\w\\w+\\b')
         if remove_stopwords:
             self.stopwords = nltk.corpus.stopwords.words('portuguese')
