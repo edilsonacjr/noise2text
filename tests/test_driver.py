@@ -10,7 +10,7 @@ from get_data import NILCDriver
 class TestNILCDriver(unittest.TestCase):
 
     def test_download(self):
-        self.driver = NILCDriver(type='word2vec', subtype='cbow', dimension=50)
+        self.driver = NILCDriver(emb_type='word2vec', subtype='cbow', dimension=50)
         self.driver.download()
         md5_hash = hashlib.md5()
         with open(self.driver.output, "rb") as f:
@@ -22,8 +22,8 @@ class TestNILCDriver(unittest.TestCase):
     def tearDown(self):
         try:
             os.remove(self.driver.output)
-        except OSError as oserr:
-            print(oserr)
+        except OSError as os_err:
+            print(os_err)
 
 
 if __name__ == '__main__':
