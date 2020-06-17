@@ -5,6 +5,7 @@
 """
 
 import numpy as np
+from pathlib import Path
 
 from keras.layers import Embedding, Input, LSTM, RepeatVector, Dense, Dropout, GaussianNoise
 from keras.models import Model
@@ -44,7 +45,8 @@ class Autoencoder():
         self.metrics = metrics
         self.checkpoint = checkpoint
         self.cp_monitor = cp_monitor
-        self.cp_folder = cp_folder
+        self.cp_folder = Path(cp_folder)
+        self.cp_folder.mkdir(parents=True, exist_ok=True)
         self.cp_filename_prefix = cp_filename_prefix
         self.cp_save_best_only = cp_save_best_only
         self.cp_save_period = cp_save_period
@@ -58,7 +60,7 @@ class Autoencoder():
         if self.cp_monitor not in ['val_loss', 'val_acc']:
             raise ValueError('Invalid cp_monitor, try "val_loss" or "val_acc"')
 
-    def data_formatting(self, X, max_num_docs):
+    def data_formatting(self, X, max_num_docs=40000):
         tokenizer = Tokenizer(num_words=self.max_num_words)
         tokenizer.fit_on_texts(X)
         sequences = tokenizer.texts_to_sequences(X)
@@ -116,7 +118,9 @@ class Autoencoder():
     def _summary(self):
         self.model.summary()
 
-    def save_model(self, filename):
+    def save_model(self, filename='model', path='model'):
+        # TODO
+        # path
         # serialize model to JSON
         model_json = self.model.to_json()
         with open("%s.json" % filename, "w") as json_file:
@@ -125,7 +129,9 @@ class Autoencoder():
         self.model.save_weights("%s.h5" % filename)
         print("Saved model to disk")
 
-    def load_model(self, filename):
+    def load_model(self, filename='model', path='model'):
+        # TODO
+        # path
         json_file = open("%s.json" % filename, 'r')
         loaded_model_json = json_file.read()
         json_file.close()
@@ -135,18 +141,21 @@ class Autoencoder():
         self.encoder = Model(self.model.input, self.model.get_layer('encoder_layer').output)
         self.noise_encoder = Model(self.model.input, self.model.get_layer('noise_encoder_layer').output)
 
-    def save_model_single_file(self, filename):
-        self.model.save("model.h5")
+    def save_model_single_file(self, filename='model.h5', path='model'):
+        model_path = Path(path)
+        model_path.mkdir(parents=True, exist_ok=True)
+        self.model.save(model_path / filename)
 
-    def load_model_single_file(self):
-        self.model = load_model('model.h5')
+    def load_model_single_file(self, filename='model.h5', path='model'):
+        model_path = Path(path)
+        self.model = load_model(model_path / filename)
         self.encoder = Model(self.model.input, self.model.get_layer('encoder_layer').output)
         self.noise_encoder = Model(self.model.input, self.model.get_layer('noise_encoder_layer').output)
 
     def fit(self, X, y, epochs, batch_size, stopped=False, shuffle=True):
         callbacks_list = []
         if self.checkpoint:
-            checkpoint = ModelCheckpoint(self.cp_folder,
+            checkpoint = ModelCheckpoint(self.cp_folder / 'weights.best.hdf5',
                                          monitor=self.cp_monitor,
                                          verbose=1,
                                          save_best_only=self.cp_save_best_only,
@@ -154,7 +163,7 @@ class Autoencoder():
             callbacks_list.append(checkpoint)
 
         if stopped:
-            self.model.load_weights(self.cp_filename)
+            self.model.load_weights(self.cp_folder / 'weights.best.hdf5')
 
         self.model.fit(X, y,
                        epochs=epochs,
@@ -165,7 +174,15 @@ class Autoencoder():
 
 
 def main():
-    pass
+    rnn_ae = Autoencoder()
+    with open('data/processed_g1_final.txt') as g1_file:
+        data = [line for line in g1_file]
+
+    x_train, y_train, word_index, output_shape = rnn_ae.data_formatting(data, 40000)
+
+    rnn_ae.build(word_index, output_shape)
+    rnn_ae.fit(x_train, y_train, 10, 128)
+    rnn_ae.save_model_single_file()
 
 
 if __name__ == '__main__':
