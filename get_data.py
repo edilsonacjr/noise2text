@@ -86,7 +86,7 @@ class NewsG1Driver:
     def save_sentences(self):
         with open(self.file_save, 'w') as output_file:
             for sentence in self.sentences:
-                output_file.write(sentence)
+                output_file.write(sentence + '\n')
 
 
 def main():
