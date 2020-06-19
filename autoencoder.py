@@ -23,6 +23,8 @@ class Autoencoder():
     def __init__(self,
                  embedding_dim=100,
                  encoding_dim=300,
+                 embedding_file='word2vec_cbow_50.txt',
+                 embedding_path='embeddings/',
                  bidirectional=False,
                  optimizer='nadam',
                  loss='binary_crossentropy',
@@ -33,12 +35,13 @@ class Autoencoder():
                  cp_filename_prefix='chkp_{epoch:02d}-{val_loss:.2f}.hdf5',
                  cp_save_best_only=True,
                  cp_save_period=10,
-                 max_num_words=150000,
+                 max_num_words=50000,
                  max_sequence_length=100,
                  noise=0.2):
 
         self.embedding_dim = embedding_dim
         self.encoding_dim = encoding_dim
+        self.embedding_filepath = Path(embedding_path) / embedding_file
         self.bidirectional = bidirectional
         self.optimizer = optimizer
         self.loss = loss
@@ -67,7 +70,6 @@ class Autoencoder():
 
         word_index = tokenizer.word_index
         print('Found %s unique tokens.' % len(word_index))
-        print(word_index.items())
 
         x_train = pad_sequences(sequences[:max_num_docs], maxlen=self.max_sequence_length, padding='pre',
                                 truncating='pre')
@@ -80,7 +82,7 @@ class Autoencoder():
     def build(self, word_index, output_shape):
 
         # Loading Word2Vec
-        model = KeyedVectors.load_word2vec_format('glove_s300.bin', binary=True)
+        model = KeyedVectors.load_word2vec_format(self.embedding_filepath, binary=True)
 
         embedding_matrix = np.zeros((len(word_index) + 1, self.embedding_dim))
         for word, i in word_index.items():
