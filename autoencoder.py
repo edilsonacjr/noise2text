@@ -64,8 +64,13 @@ class Autoencoder():
             raise ValueError('Invalid cp_monitor, try "val_loss" or "val_acc"')
 
     def data_formatting(self, X, max_num_docs=40000):
-        tokenizer = Tokenizer(num_words=self.max_num_words)
+        tokenizer = Tokenizer(num_words=self.max_num_words+1)
         tokenizer.fit_on_texts(X)
+        # Bug on Tokenizer when creating the index, it changed the way that worked on old versions
+        tokenizer.word_index = {e: i for e, i in tokenizer.word_index.items() if i <= self.max_num_words}
+        tokenizer.word_index[tokenizer.oov_token] = self.max_num_words + 1
+        ##
+
         sequences = tokenizer.texts_to_sequences(X)
 
         word_index = tokenizer.word_index
