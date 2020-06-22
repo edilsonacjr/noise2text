@@ -1,0 +1,15 @@
+pipeline:
+  get_data:
+    embedding_driver: NILCDriver
+    emb_type: 'word2vec'
+    subtype: 'skip'
+    dimension: 100
+
+  model_training:
+    autoencoder_type:
+
+
+
+
+
+#http://143.107.183.175:22980/download.php?file=embeddings/word2vec/skip_s100.zip

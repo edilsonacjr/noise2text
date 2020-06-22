@@ -3,7 +3,7 @@
     
     Author: Edilson A. Correa Junior <edilsonacjr@gmail.com>
 """
-
+import os
 import numpy as np
 from pathlib import Path
 
@@ -17,11 +17,13 @@ from keras.callbacks import ModelCheckpoint
 
 from gensim.models import KeyedVectors
 
+# MacOS problem
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 class Autoencoder():
 
     def __init__(self,
-                 embedding_dim=100,
+                 embedding_dim=50,
                  encoding_dim=300,
                  embedding_file='word2vec_cbow_50.txt',
                  embedding_path='embeddings/',
@@ -35,7 +37,7 @@ class Autoencoder():
                  cp_filename_prefix='chkp_{epoch:02d}-{val_loss:.2f}.hdf5',
                  cp_save_best_only=True,
                  cp_save_period=10,
-                 max_num_words=50000,
+                 max_num_words=500,
                  max_sequence_length=100,
                  noise=0.2):
 
@@ -48,8 +50,8 @@ class Autoencoder():
         self.metrics = metrics
         self.checkpoint = checkpoint
         self.cp_monitor = cp_monitor
-        self.cp_folder = Path(cp_folder)
-        self.cp_folder.mkdir(parents=True, exist_ok=True)
+        self.cp_folder = cp_folder
+#        self.cp_folder.mkdir(parents=True, exist_ok=True)
         self.cp_filename_prefix = cp_filename_prefix
         self.cp_save_best_only = cp_save_best_only
         self.cp_save_period = cp_save_period
@@ -63,7 +65,7 @@ class Autoencoder():
         if self.cp_monitor not in ['val_loss', 'val_acc']:
             raise ValueError('Invalid cp_monitor, try "val_loss" or "val_acc"')
 
-    def data_formatting(self, X, max_num_docs=40000):
+    def data_formatting(self, X, max_num_docs=100):
         tokenizer = Tokenizer(num_words=self.max_num_words+1)
         tokenizer.fit_on_texts(X)
         # Bug on Tokenizer when creating the index, it changed the way that worked on old versions
@@ -87,7 +89,7 @@ class Autoencoder():
     def build(self, word_index, output_shape):
 
         # Loading Word2Vec
-        model = KeyedVectors.load_word2vec_format(self.embedding_filepath, binary=True)
+        model = KeyedVectors.load_word2vec_format(self.embedding_filepath, binary=False)
 
         embedding_matrix = np.zeros((len(word_index) + 1, self.embedding_dim))
         for word, i in word_index.items():
@@ -160,9 +162,12 @@ class Autoencoder():
         self.noise_encoder = Model(self.model.input, self.model.get_layer('noise_encoder_layer').output)
 
     def fit(self, X, y, epochs, batch_size, stopped=False, shuffle=True):
+        self._compile()
+        self._summary()
+
         callbacks_list = []
         if self.checkpoint:
-            checkpoint = ModelCheckpoint(self.cp_folder / 'weights.best.hdf5',
+            checkpoint = ModelCheckpoint(self.cp_folder + '/' +  self.cp_filename_prefix,
                                          monitor=self.cp_monitor,
                                          verbose=1,
                                          save_best_only=self.cp_save_best_only,
@@ -185,7 +190,7 @@ def main():
     with open('data/processed_g1_final.txt') as g1_file:
         data = [line for line in g1_file]
 
-    x_train, y_train, word_index, output_shape = rnn_ae.data_formatting(data, 40000)
+    x_train, y_train, word_index, output_shape = rnn_ae.data_formatting(data)
 
     rnn_ae.build(word_index, output_shape)
     rnn_ae.fit(x_train, y_train, 10, 128)

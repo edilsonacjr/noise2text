@@ -92,7 +92,7 @@ class NewsG1Driver:
 def main():
     nltk.download('stopwords')
     driver = NILCDriver(emb_type='word2vec', subtype='cbow', dimension=50)
-    driver.download()
+    driver.download_extract()
     g1 = NewsG1Driver(file_name='g1_final.txt')
     g1.preprocess()
     g1.save_sentences()
