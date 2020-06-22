@@ -8,8 +8,10 @@
 
 import os
 import urllib.request
+import json
 
 import nltk
+import numpy as np
 
 from pathlib import Path
 from zipfile import ZipFile
@@ -89,13 +91,63 @@ class NewsG1Driver:
                 output_file.write(sentence + '\n')
 
 
+class MCIDriver:
+    def __init__(self, file_name, path='data/', remove_stopwords=True, processed_pattern='processed_{file_name}'):
+        self.file = os.path.join(path, file_name)
+        self.file_save_setences = os.path.join(path, 'senteces_' + processed_pattern.format(file_name=file_name))
+        self.file_save_targets = os.path.join(path, 'targets_' + processed_pattern.format(file_name=file_name))
+        self.tokenizer = nltk.tokenize.RegexpTokenizer('(?u)\\b\\w\\w+\\b')
+        if remove_stopwords:
+            self.stopwords = nltk.corpus.stopwords.words('portuguese')
+        else:
+            self.stopwords = []
+        self.sentences = []
+        self.targets = []
+
+    def preprocess(self):
+        docs_CCL = []
+        docs_NLS = []
+        with open('data_set_cohmetrix_cn_trh_1.0.json', 'r') as json_data:
+            for line in json_data:
+                doc = json.loads(line)
+                if doc['group'] == 'MCI':
+                    text = ' '.join(doc['sentences'])
+                    original_tokens = self.tokenizer.tokenize(text)
+                    tokens = [w.lower() for w in original_tokens if w.lower() not in self.stopwords and
+                              not w.isnumeric() and len(w) > 1]
+                    docs_CCL.append(' '.join(tokens))
+                else:
+                    text = ' '.join(doc['sentences'])
+                    original_tokens = self.tokenizer.tokenize(text)
+                    tokens = [w.lower() for w in original_tokens if w.lower() not in self.stopwords and
+                              not w.isnumeric() and len(w) > 1]
+                    docs_NLS.append(' '.join(tokens))
+
+        targets = [1] * len(docs_CCL) + [0] * len(docs_NLS)
+        sentences = docs_CCL + docs_CCL
+        self.sentences = sentences
+        return sentences, targets
+
+    def save_sentences(self):
+        with open(self.file_save_setences, 'w') as output_file:
+            for sentence in self.sentences:
+                output_file.write(sentence + '\n')
+        with open(self.file_save_targets, 'w') as output_file:
+            for sentence in self.sentences:
+                output_file.write(sentence + '\n')
+
+
 def main():
-    nltk.download('stopwords')
-    driver = NILCDriver(emb_type='word2vec', subtype='cbow', dimension=50)
-    driver.download_extract()
-    g1 = NewsG1Driver(file_name='g1_final.txt')
-    g1.preprocess()
-    g1.save_sentences()
+    #nltk.download('stopwords')
+    #driver = NILCDriver(emb_type='word2vec', subtype='cbow', dimension=50)
+    #driver.download_extract()
+    #g1 = NewsG1Driver(file_name='g1_final.txt')
+    #g1.preprocess()
+    #g1.save_sentences()
+
+    mci = MCIDriver(file_name='data_set_cohmetrix_cn_trh_1.0.json')
+    mci.preprocess()
+    mci.save_sentences()
 
 
 if __name__ == '__main__':
