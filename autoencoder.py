@@ -67,6 +67,7 @@ class Autoencoder():
             raise ValueError('Invalid cp_monitor, try "val_loss" or "val_acc"')
 
     def data_formatting(self, X, max_num_docs=40000):
+        word_index = None
         if not self.tokenizer:
             self.tokenizer = Tokenizer(num_words=self.max_num_words+1)
             self.tokenizer.fit_on_texts(X)
