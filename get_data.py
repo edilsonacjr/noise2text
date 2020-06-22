@@ -123,10 +123,9 @@ class MCIDriver:
                               not w.isnumeric() and len(w) > 1]
                     docs_NLS.append(' '.join(tokens))
 
-        targets = [1] * len(docs_CCL) + [0] * len(docs_NLS)
-        sentences = docs_CCL + docs_CCL
-        self.sentences = sentences
-        return sentences, targets
+        self.targets = [1] * len(docs_CCL) + [0] * len(docs_NLS)
+        self.sentences = docs_CCL + docs_CCL
+        return self.sentences, self.targets
 
     def save_sentences(self):
         with open(self.file_save_setences, 'w') as output_file:
@@ -134,7 +133,7 @@ class MCIDriver:
                 output_file.write(sentence + '\n')
         with open(self.file_save_targets, 'w') as output_file:
             for target in self.targets:
-                output_file.write(target + '\n')
+                output_file.write(str(target) + '\n')
 
 
 def main():
