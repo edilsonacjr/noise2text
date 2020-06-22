@@ -18,7 +18,7 @@ from keras.callbacks import ModelCheckpoint
 from gensim.models import KeyedVectors
 
 # MacOS problem
-os.environ['KMP_DUPLICATE_LIB_OK']='True'
+#os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 class Autoencoder():
 
@@ -37,7 +37,7 @@ class Autoencoder():
                  cp_filename_prefix='chkp_{epoch:02d}-{val_loss:.2f}.hdf5',
                  cp_save_best_only=True,
                  cp_save_period=10,
-                 max_num_words=500,
+                 max_num_words=30000,
                  max_sequence_length=100,
                  noise=0.2):
 
@@ -61,26 +61,27 @@ class Autoencoder():
         self.model = None
         self.encoder = None
         self.noise_encoder = None
+        self.tokenizer = None
 
         if self.cp_monitor not in ['val_loss', 'val_acc']:
             raise ValueError('Invalid cp_monitor, try "val_loss" or "val_acc"')
 
-    def data_formatting(self, X, max_num_docs=100):
-        tokenizer = Tokenizer(num_words=self.max_num_words+1)
-        tokenizer.fit_on_texts(X)
-        # Bug on Tokenizer when creating the index, it changed the way that worked on old versions
-        tokenizer.word_index = {e: i for e, i in tokenizer.word_index.items() if i <= self.max_num_words}
-        tokenizer.word_index[tokenizer.oov_token] = self.max_num_words + 1
-        ##
+    def data_formatting(self, X, max_num_docs=40000):
+        if not self.tokenizer:
+            self.tokenizer = Tokenizer(num_words=self.max_num_words+1)
+            self.tokenizer.fit_on_texts(X)
+            # Bug on Tokenizer when creating the index, it changed the way that worked on old versions
+            self.tokenizer.word_index = {e: i for e, i in self.tokenizer.word_index.items() if i <= self.max_num_words}
+            self.tokenizer.word_index[self.tokenizer.oov_token] = self.max_num_words + 1
+            ##
+            word_index = self.tokenizer.word_index
+            print('Found %s unique tokens.' % len(word_index))
 
-        sequences = tokenizer.texts_to_sequences(X)
-
-        word_index = tokenizer.word_index
-        print('Found %s unique tokens.' % len(word_index))
+        sequences = self.tokenizer.texts_to_sequences(X)
 
         x_train = pad_sequences(sequences[:max_num_docs], maxlen=self.max_sequence_length, padding='pre',
                                 truncating='pre')
-        y_train = tokenizer.texts_to_matrix(X[:max_num_docs], mode='binary')
+        y_train = self.tokenizer.texts_to_matrix(X[:max_num_docs], mode='binary')
 
         print('Shape of data tensor:', x_train.shape)
 
