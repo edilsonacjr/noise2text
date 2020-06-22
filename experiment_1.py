@@ -19,7 +19,7 @@ def main():
 
     # Data loading and preprocessing
     nltk.download('stopwords')
-    driver = NILCDriver(emb_type='word2vec', subtype='cbow', dimension=50)
+    driver = NILCDriver(emb_type='glove', subtype='cbow', dimension=300)
     driver.download_extract()
     g1 = NewsG1Driver(file_name='g1_final.txt')
     g1.preprocess()
@@ -33,7 +33,7 @@ def main():
         data = [line for line in g1_file]
 
     # Model training
-    rnn_ae = Autoencoder()
+    rnn_ae = Autoencoder(encoding_dim=500, embedding_dim=300)
     x_train, y_train, word_index, output_shape = rnn_ae.data_formatting(data)
 
     x_test, _, _, _ = rnn_ae.data_formatting(mci_data)
