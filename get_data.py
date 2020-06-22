@@ -107,7 +107,7 @@ class MCIDriver:
     def preprocess(self):
         docs_CCL = []
         docs_NLS = []
-        with open('data_set_cohmetrix_cn_trh_1.0.json', 'r') as json_data:
+        with open(self.file, 'r') as json_data:
             for line in json_data:
                 doc = json.loads(line)
                 if doc['group'] == 'MCI':
