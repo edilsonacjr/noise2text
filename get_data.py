@@ -133,8 +133,8 @@ class MCIDriver:
             for sentence in self.sentences:
                 output_file.write(sentence + '\n')
         with open(self.file_save_targets, 'w') as output_file:
-            for sentence in self.sentences:
-                output_file.write(sentence + '\n')
+            for target in self.targets:
+                output_file.write(target + '\n')
 
 
 def main():
