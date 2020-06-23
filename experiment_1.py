@@ -33,7 +33,7 @@ def main():
         data = [line for line in g1_file]
 
     # Model training
-    rnn_ae = Autoencoder(encoding_dim=500, embedding_dim=300, embedding_file=driver.file_name)
+    rnn_ae = Autoencoder(encoding_dim=500, embedding_dim=300, embedding_file=driver.file_name + '.txt')
     x_train, y_train, word_index, output_shape = rnn_ae.data_formatting(data)
 
     x_test, _, _, _ = rnn_ae.data_formatting(mci_data)
